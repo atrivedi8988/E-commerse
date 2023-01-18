@@ -6,6 +6,10 @@ const ErrorHandler = require("../utils/errorHandler");
 // create new products -- Admin
 
 exports.createNewProduct = catchAsyncError(async (req, res, next) => {
+
+
+  req.body.user = req.user.id
+
   const product = await Product.create(req.body);
 
   res.status(201).json({

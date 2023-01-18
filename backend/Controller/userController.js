@@ -1,6 +1,7 @@
 const ErrorHandler = require("../utils/errorHandler");
 const catchAsyncError = require("../middleware/catchAsyncError");
 const User = require("../Models/userModel");
+const sendToken = require("../utils/jwtToken");
 
 // Register new User
 
@@ -17,12 +18,7 @@ exports.registerUser = catchAsyncError(async (req, res, next) => {
     },
   });
 
-  const token = user.getJWTtoken()
-
-  res.status(201).json({
-    success: true,
-    token
-  });
+  sendToken(user,201,res)
 });
 
 
@@ -50,12 +46,20 @@ exports.loginUser = catchAsyncError(async(req,res,next)=>{
       return next(new ErrorHandler("Invalid email & password"),401)
     }
 
-    
-  const token = user.getJWTtoken()
+ sendToken(user,200,res)
+
+})
+
+// logout user
+
+exports.logoutUser = catchAsyncError((req,res,next)=>{
+  res.cookie("token",null,{
+    expires:new Date(Date.now()),
+    httpOnly:true
+  })
 
   res.status(200).json({
-    success: true,
-    token
-  });
-
+    success:true,
+    message:"Logged Out"
+  })
 })
