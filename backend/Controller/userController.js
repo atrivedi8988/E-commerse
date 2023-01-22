@@ -108,7 +108,7 @@ exports.forgotPassword = catchAsyncError(async (req, res, next) => {
 exports.resetPassword = catchAsyncError(async (req, res, next) => {
   //creating token hash
 
-  console.log(req.params)
+  console.log(req.params);
 
   const resetPasswordToken = crypto
     .createHash("sha256")
@@ -133,48 +133,69 @@ exports.resetPassword = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler("Password does not match", 400));
   }
 
-  if(req.body.password===user.password){
-    return next(new ErrorHandler("new and old password matched please put another one"))
+  if (req.body.password === user.password) {
+    return next(
+      new ErrorHandler("new and old password matched please put another one")
+    );
   }
 
   user.password = req.body.password;
   user.resetPasswordToken = undefined;
-  user.resetPasswordExpire = undefined
+  user.resetPasswordExpire = undefined;
 
   await user.save();
 
-  sendToken(user,200,res)
+  sendToken(user, 200, res);
 });
 
-
 // Get User Details
-exports.getUserDetails = catchAsyncError(async(req,res,next)=>{
+exports.getUserDetails = catchAsyncError(async (req, res, next) => {
   const user = await User.findById(req.user.id);
 
   res.status(200).json({
-    success:true,
-    user
+    success: true,
+    user,
   });
-})
+});
 
 // Update user password
-exports.updatePassword = catchAsyncError(async(req,res,next)=>{
-
+exports.updatePassword = catchAsyncError(async (req, res, next) => {
   const user = await User.findById(req.user.id).select("+password");
 
   const isPasswordMatched = await user.comparePassword(req.body.oldPassword);
 
-  if(!isPasswordMatched){
-    return next(new ErrorHandler("Old password is incorrect",400))
+  if (!isPasswordMatched) {
+    return next(new ErrorHandler("Old password is incorrect", 400));
   }
 
-  if(req.body.newPassword!==req.body.confirmPassword){
-    return next(new ErrorHandler("Password does not match",400))
+  if (req.body.newPassword !== req.body.confirmPassword) {
+    return next(new ErrorHandler("Password does not match", 400));
   }
 
   user.password = req.body.newPassword;
 
-  await user.save()
+  await user.save();
 
-  sendToken(user,200,res)
-})
+  sendToken(user, 200, res);
+});
+
+// update user profile
+exports.updateProfile = catchAsyncError(async (req, res, next) => {
+  const newUserData = {
+    name: req.body.name,
+    email: req.body.email,
+  };
+
+  // we will add cloudinary later
+
+  const user = await User.findByIdAndUpdate(req.user.id, newUserData, {
+    new: true,
+    runValidators: true,
+    useFindAndModify: false,
+  });
+
+  res.status(200).json({
+    success: true,
+    user
+  });
+});
