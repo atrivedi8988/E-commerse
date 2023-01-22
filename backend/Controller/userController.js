@@ -4,6 +4,7 @@ const User = require("../Models/userModel");
 const sendToken = require("../utils/jwtToken");
 const sendEmail = require("../utils/sendEmail.js");
 const crypto = require("crypto");
+const { use } = require("../Routes/userRoutes");
 
 // Register new User
 
@@ -144,3 +145,36 @@ exports.resetPassword = catchAsyncError(async (req, res, next) => {
 
   sendToken(user,200,res)
 });
+
+
+// Get User Details
+exports.getUserDetails = catchAsyncError(async(req,res,next)=>{
+  const user = await User.findById(req.user.id);
+
+  res.status(200).json({
+    success:true,
+    user
+  });
+})
+
+// Update user password
+exports.updatePassword = catchAsyncError(async(req,res,next)=>{
+
+  const user = await User.findById(req.user.id).select("+password");
+
+  const isPasswordMatched = await user.comparePassword(req.body.oldPassword);
+
+  if(!isPasswordMatched){
+    return next(new ErrorHandler("Old password is incorrect",400))
+  }
+
+  if(req.body.newPassword!==req.body.confirmPassword){
+    return next(new ErrorHandler("Password does not match",400))
+  }
+
+  user.password = req.body.newPassword;
+
+  await user.save()
+
+  sendToken(user,200,res)
+})
