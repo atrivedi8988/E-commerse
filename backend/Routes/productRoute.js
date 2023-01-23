@@ -10,13 +10,15 @@ const { isAuthenticatedUser, authorizeRoles } = require("../middleware/auth");
 
 const router = express.Router();
 
-router.route("/products").get(isAuthenticatedUser, getAllproducts);
+router.route("/products").get(getAllproducts);
 
-router.route("/products/new").post(isAuthenticatedUser, authorizeRoles("admin"), createNewProduct);
+router.route("/admin/products/new").post(isAuthenticatedUser, authorizeRoles("admin"), createNewProduct);
+
 router
-  .route("/products/:id")
+  .route("/admin/products/:id")
   .put(isAuthenticatedUser,authorizeRoles("admin"), updateProduct)
   .delete(isAuthenticatedUser,authorizeRoles("admin"), deleteProducts)
-  .get(getProductDetails);
+  
+router.route("/products/:id").get(getProductDetails);
 
 module.exports = router;
