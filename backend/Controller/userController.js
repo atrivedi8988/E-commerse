@@ -224,3 +224,45 @@ exports.getSingleUser = catchAsyncError(async(req,res,next)=>{
     user
   })
 })
+
+// Update user Role
+exports.updateUserRole = catchAsyncError(async(req,res,next)=>{
+  const newUserData = {
+    name: req.body.name,
+    email: req.body.email,
+    role : req.body.role
+  };
+
+  const user = await User.findByIdAndUpdate(req.params.id, newUserData, {
+    new: true,
+    runValidators: true,
+    useFindAndModify: false,
+  });
+
+  if(!user){
+    return next(new ErrorHandler(`user does not exist with this id ${req.params.id}`,404))
+  }
+
+  res.status(200).json({
+    success: true,
+    user
+  });
+})
+
+// Delete User
+exports.deleteUser = catchAsyncError(async(req,res,next)=>{
+  const user = await User.findById(req.params.id)
+
+  
+  if(!user){
+    return next(new ErrorHandler(`user does not exist with this id ${req.params.id}`,404))
+  }
+
+  await user.remove()
+
+  
+  res.status(200).json({
+    success: true,
+    message:"Deleted successfully"
+  });
+})
