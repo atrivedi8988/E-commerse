@@ -6,9 +6,7 @@ const ErrorHandler = require("../utils/errorHandler");
 // create new products -- Admin
 
 exports.createNewProduct = catchAsyncError(async (req, res, next) => {
-
-
-  req.body.user = req.user.id
+  req.body.user = req.user.id;
 
   const product = await Product.create(req.body);
 
@@ -21,14 +19,14 @@ exports.createNewProduct = catchAsyncError(async (req, res, next) => {
 // get all products
 
 exports.getAllproducts = catchAsyncError(async (req, res, next) => {
-  const resultPerPage = 5 ;
-  const productCount = await Product.countDocuments()
+  const resultPerPage = 5;
+  const productCount = await Product.countDocuments();
   const apiFeature = new ApiFeature(Product.find(), req.query)
     .search()
     .filter()
-    .pagination(resultPerPage)
+    .pagination(resultPerPage);
 
-    // console.log(apiFeature)
+  // console.log(apiFeature)
 
   const product = await apiFeature.query;
 
@@ -37,7 +35,7 @@ exports.getAllproducts = catchAsyncError(async (req, res, next) => {
   res.status(201).json({
     success: true,
     product,
-    productCount
+    productCount,
   });
 });
 
@@ -89,44 +87,93 @@ exports.deleteProducts = catchAsyncError(async (req, res, next) => {
 });
 
 // create new Review and update reviews
-exports.createAndUpdateProductReview = catchAsyncError(async(req,res,next)=>{
-  const {productId,rating,comment} = req.body
+exports.createAndUpdateProductReview = catchAsyncError(
+  async (req, res, next) => {
+    const { productId, rating, comment } = req.body;
 
-  const review = {
-    user:req.user._id,
-    name:req.user.name,
-    rating:Number(rating),
-    comment
+    const review = {
+      user: req.user._id,
+      name: req.user.name,
+      rating: Number(rating),
+      comment,
+    };
+
+    const product = await Product.findById(productId);
+
+    const isReviewed = product.reviews.find(
+      (rev) => rev.user.toString() === req.user._id.toString()
+    );
+
+    if (isReviewed) {
+      product.reviews.forEach((rev) => {
+        if (rev.user.toString() === req.user._id.toString()) {
+          rev.rating = rating;
+          rev.comment = comment;
+        }
+      });
+    } else {
+      product.reviews.push(review);
+      product.numOfReviews = product.reviews.length;
+    }
+
+    let avg = 0;
+    product.reviews.forEach((rev) => {
+      avg += rev.rating;
+    });
+
+    product.ratings = avg / product.reviews.length;
+
+    await product.save({ validateBeforeSave: false });
+
+    res.status(200).json({
+      success: true,
+    });
   }
+);
 
-  const product = await Product.findById(productId)
+// Get all user reviews
+exports.getAllReviews = catchAsyncError(async (req, res, next) => {
+  const product = await Product.findById(req.query.productId);
 
-  
-  const isReviewed = product.reviews.find(rev=>rev.user.toString()===req.user._id.toString())
-
-  if(isReviewed){
-    product.reviews.forEach((rev)=>{
-      if(rev.user.toString()===req.user._id.toString()){
-        rev.rating = rating
-        rev.comment = comment
-      }
-    })
-  }else{
-    product.reviews.push(review)
-    product.numOfReviews = product.reviews.length
+  if (!product) {
+    return next(new ErrorHandler("product not found", 404));
   }
-
-  let avg = 0;
-  product.reviews.forEach((rev)=>{
-    avg+=rev.rating
-  })
-
-  product.ratings = avg/product.reviews.length
-
-  await product.save({validateBeforeSave:false})
 
   res.status(200).json({
-    success:true
-  })
+    success: true,
+    reviews: product.reviews,
+  });
+});
 
-})
+// Delete Reviews
+exports.deleteReviews = catchAsyncError(async (req, res, next) => {
+  const product = await Product.findById(req.query.productId);
+
+  let reviews =  product.reviews.filter((rev) => rev._id.toString() !== req.query.id);
+
+
+
+  let avg = 0;
+  reviews.forEach((rev) => {
+    avg += rev.rating;
+  });
+
+  const ratings = reviews.length===0?avg: avg / reviews.length;
+  
+  const numOfReviews = reviews.length;
+
+  await Product.findByIdAndUpdate(
+    req.query.productId,
+    { reviews, ratings, numOfReviews },
+    {
+      new: true,
+      runValidators: true,
+      useFindAndModify:false
+    }
+  );
+
+  res.status(200).json({
+    success: true,
+    message:"successfully deleted"
+  });
+});
