@@ -2,7 +2,6 @@ import React from "react";
 import playStore from "../../../images/playstore.png";
 import appStore from "../../../images/Appstore.png";
 import "./Footer.css";
-import logo from "../../../images/logo.png"
 
 const Footer = () => {
   return (
@@ -15,7 +14,7 @@ const Footer = () => {
       </div>
 
       <div className="midFooter">
-        <h1>SHOPIFY</h1>
+        <h1>ECOMMERCE.</h1>
         <p>High Quality is our first priority</p>
 
         <p>Copyrights 2021 &copy; MeAbhiSingh</p>
@@ -23,9 +22,9 @@ const Footer = () => {
 
       <div className="rightFooter">
         <h4>Follow Us</h4>
-        <a href="http://instagram.com">Instagram</a>
-        <a href="http://youtube.com">Youtube</a>
-        <a href="http://facebook.com">Facebook</a>
+        <a href="http://instagram.com/meabhisingh">Instagram</a>
+        <a href="http://youtube.com/6packprogramemr">Youtube</a>
+        <a href="http://instagram.com/meabhisingh">Facebook</a>
       </div>
     </footer>
   );
